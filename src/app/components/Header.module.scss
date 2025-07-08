@@ -7,4 +7,9 @@
 .nav {
 	display: flex;
 	gap: 12px;
+	&Link {
+		&:hover {
+			color: red;
+		}
+	}
 }
