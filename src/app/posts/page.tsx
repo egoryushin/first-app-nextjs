@@ -1,13 +1,13 @@
 import Link from 'next/link'
 
-type Post = {
+type Posts = {
 	id: number
 	title: string
 }
 
 export default async function PostsPage() {
 	const res = await fetch(`https://jsonplaceholder.typicode.com/posts`)
-	const post: Post[] = await res.json()
+	const post: Posts[] = await res.json()
 
 	return (
 		<div>
