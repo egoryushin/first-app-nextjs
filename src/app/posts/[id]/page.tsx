@@ -7,15 +7,17 @@ type Post = {
 }
 
 type Params = {
-	params: {
+	params: Promise<{
 		id: string
-	}
+	}>
 }
 
-export default async function Page({ params }: Params) {
-	const res = await fetch(
-		`https://jsonplaceholder.typicode.com/posts/${params.id}`
-	)
+export default async function Page(props: Params) {
+	const { id } = await props.params
+	await new Promise(resolve => setTimeout(resolve, 2000)) // Имитация задержки загрузки
+	const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+		next: { revalidate: 600 }, // Кэширование на 10 минут, ISR (Incremental Static Regeneration)
+	})
 
 	if (!res.ok) {
 		return notFound()
@@ -32,6 +34,7 @@ export default async function Page({ params }: Params) {
 	)
 }
 
+// SSG: Генерация статических параметров
 export async function generateStaticParams() {
 	try {
 		const res = await fetch('https://jsonplaceholder.typicode.com/posts')
@@ -47,4 +50,24 @@ export async function generateStaticParams() {
 		console.error('Ошибка при загрузке постов', error)
 	}
 	return []
+}
+
+// Генерация метаданных для страницы поста
+// Используется для SEO, заголовок и описание
+export async function generateMetadata({ params }: Params) {
+	const { id } = await params
+	const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
+
+	if (!res.ok) {
+		return {
+			title: 'Пост не найден',
+			description: 'Такого поста не существует',
+		}
+	}
+
+	const post: Post = await res.json()
+	return {
+		title: post.title,
+		description: post.body.slice(0, 100), // первые 100 символов
+	}
 }
